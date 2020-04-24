@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>538937888380-8bttdg4s0v55dj7i0jqh1mcriig519qb.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.538937888380-8bttdg4s0v55dj7i0jqh1mcriig519qb</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDRwUIFuQ3I5Fyf6It3pTSNS_iUBGYXxRc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>538937888380</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.ultrav</string>
+	<key>PROJECT_ID</key>
+	<string>ultrav-26a4e</string>
+	<key>STORAGE_BUCKET</key>
+	<string>ultrav-26a4e.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:538937888380:ios:87838367c82f33fa9643f9</string>
+	<key>DATABASE_URL</key>
+	<string>https://ultrav-26a4e.firebaseio.com</string>
+</dict>
+</plist>
