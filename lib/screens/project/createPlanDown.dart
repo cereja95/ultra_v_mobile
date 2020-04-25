@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ultravmobile/model/point.dart';
-import 'package:ultravmobile/screens/project/createPlanDown.dart';
+
 import 'package:ultravmobile/screens/project/listProject.dart';
 import 'package:ultravmobile/screens/project/props_list_tubes.dart';
 import 'package:ultravmobile/screens/project/props_list_vertices.dart';
@@ -20,28 +20,29 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:math';
 
 //Página de planta Baixa
 
-class MyAppDown extends StatelessWidget {
+class MyAppDownPdf extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: navBarGeneral(back: true),
-      body: PlanDownPage(),
+      body: PlanDownPDFPage(),
     );
   }
 }
 
-class PlanDownPage extends StatefulWidget {
-  PlanDownPage({Key key, this.title}) : super(key: key);
+class PlanDownPDFPage extends StatefulWidget {
+  PlanDownPDFPage({Key key, this.title}) : super(key: key);
   final String title;
 
   @override
-  _PlanDownPage createState() => _PlanDownPage();
+  _PlanDownPDFPage createState() => _PlanDownPDFPage();
 }
 
-class _PlanDownPage extends State<PlanDownPage> {
+class _PlanDownPDFPage extends State<PlanDownPDFPage> {
   var bloc = BlocProvider.getBloc<BlocPlan>();
   Room room = Room();
   Room room2 = Room();
@@ -235,6 +236,76 @@ class _PlanDownPage extends State<PlanDownPage> {
         });
   }
 
+  String colorString(index) {
+    switch (index) {
+      case 0:
+        {
+          return "Azul";
+        }
+        break;
+
+      case 1:
+        {
+          return "Vermelho";
+        }
+        break;
+
+      case 2:
+        {
+          return "Laranja";
+        }
+        break;
+
+      case 3:
+        {
+          return "Amarelo";
+        }
+        break;
+
+      case 4:
+        {
+          return "Verde";
+        }
+        break;
+
+      case 5:
+        {
+          return "Marrom";
+        }
+        break;
+
+      case 6:
+        {
+          return "Roxo";
+        }
+        break;
+
+      case 6:
+        {
+          return "Verde Água";
+        }
+        break;
+
+      case 6:
+        {
+          return "Preto";
+        }
+        break;
+
+      case 6:
+        {
+          return "Rosa";
+        }
+        break;
+
+      default:
+        {
+          return "Verde Teal";
+        }
+        break;
+    }
+  }
+
   Color color(index) {
     switch (index) {
       case 0:
@@ -320,9 +391,6 @@ class _PlanDownPage extends State<PlanDownPage> {
     p.room.lines = [];
     painter.room.lines.forEach((element) => {p.room.lines.add(element)});
 
-    //p.room = painter.room;
-    // p = painter;
-    print("Foda-se");
     p.pointers = painter.pointers;
     p.proportional = painter.proportional;
     p.planSize = painter.planSize;
@@ -336,51 +404,89 @@ class _PlanDownPage extends State<PlanDownPage> {
       painter2 = p;
     });
 
-    //  await showPicture(context, p);
+    // await showPicture(context, p);
     RenderRepaintBoundary boundary = scr.currentContext.findRenderObject();
     var image = await boundary.toImage();
     var byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     pngBytes = await byteData.buffer.asUint8List();
 
     setState(() {
-      isVisible = false;
       pngBytes = byteData.buffer.asUint8List();
     });
     pdfCreate();
     print(pngBytes);
   }
 
+  pw.Widget createPagesRoomsPdf(context) {
+    var m = 0;
+    List<pw.Widget> list = new List();
+    list.add(pw.Text("hi"));
+    list.add(pw.Text("hi2"));
+    list.add(pw.Text("hi3"));
+
+    bloc.selectPlan.rooms.forEach(
+        (element) => {list.add(createPageRoomPdf(context, element, m)), m++});
+
+    pw.Widget listView = pw.ListView(children: list);
+
+    return listView;
+  }
+
+  pw.Widget createPageRoomPdf(context, item, m) {
+    List<pw.Widget> list = [];
+    list.add(createTablePdf(m, context));
+    list.add(createTablePdfPointers(m, context));
+    pw.Widget listView = pw.ListView(children: list);
+    return listView;
+  }
+
+  createTablePdf(index, context) {
+    var i = 0;
+    var t = "";
+    List<List<String>> listString = [];
+    listString.add(<String>['Nome', 'Coordenadas (cm)', 'Tamanho (cm)', "Cor"]);
+    bloc.selectPlan.rooms[index].walls.forEach((element) => {
+          i++,
+          listString.add(<String>[
+            element.name,
+            '(${element.initialX},${element.initialY}) (${element.finalX}, ${element.finalY})',
+            '${hipotenusa(element).toStringAsFixed(2)}',
+            "${colorString(i - 1)}"
+          ])
+        });
+
+    return pw.Table.fromTextArray(context: context, data: listString);
+  }
+
+  createTablePdfPointers(index, context) {
+    var i = 0;
+    var t = "";
+    List<List<String>> listString = [];
+    listString.add(<String>['Nome', 'Coordenadas (cm)', "Cor"]);
+    bloc.selectPlan.rooms[index].vertices.forEach((element) => {
+          i++,
+          listString.add(<String>[
+            element.name,
+            '(${element.coordX},${element.coordY})',
+            "${colorString(i - 1)}"
+          ])
+        });
+
+    return pw.Table.fromTextArray(context: context, data: listString);
+  }
+
+  double hipotenusa(item) {
+    return pow(
+        pow(double.parse((item.finalX - item.initialX).toString()), 2) +
+            pow(double.parse((item.finalY - item.initialY).toString()), 2),
+        1 / 2);
+  }
+
   var pngBytes;
   var scr = new GlobalKey();
   final pdf = pw.Document();
 
-  wallsPdf() {
-    return pw.Container(
-        color: PdfColors.white,
-        width: 300,
-        child: pw.Column(children: [
-          pw.Container(
-              color: PdfColors.white,
-              width: 300,
-              margin: pw.EdgeInsets.all(10),
-              child: pw.Text("Parede 1")),
-          pw.Container(
-              color: PdfColors.white,
-              width: 300,
-              margin: pw.EdgeInsets.all(10),
-              child: pw.Text("Coordenadas:  (0,0) - (0, 500)")),
-          pw.Container(
-              color: PdfColors.white,
-              width: 300,
-              margin: pw.EdgeInsets.all(10),
-              child: pw.Text("Tamanho:  500 cm")),
-        ]));
-  }
-
   void pdfCreate() async {
-    setState(() {
-      isVisible = false;
-    });
     final image = PdfImage.file(
       pdf.document,
       bytes: pngBytes,
@@ -434,22 +540,22 @@ class _PlanDownPage extends State<PlanDownPage> {
               pw.Image(image),
               pw.Padding(padding: const pw.EdgeInsets.all(10)),
               pw.Paragraph(text: "Paredes e portas:"),
-              pw.Table.fromTextArray(
-                  context: context,
-                  data: const <List<String>>[
-                    <String>['Nome', 'Coordenadas (cm)', 'Tamanho (cm)', "Cor"],
-                    <String>['Parede 1', '(0,200) (0, 0)', '500 cm', "Laranja"],
-                    <String>['Parede 2', '(0,200) (0, 0)', '500 cm', "Laranja"],
-                  ]),
+
+              createPagesRoomsPdf(context),
+              createTablePdf(0, context),
+              // pw.Table.fromTextArray(
+              //     context: context,
+              //     data: const <List<String>>[
+              //       <String>['Nome', 'Coordenadas (cm)', 'Tamanho (cm)', "Cor"],
+              //       <String>['Parede 1', '(0,200) (0, 0)', '500 cm', "Laranja"],
+              //       <String>['Parede 2', '(0,200) (0, 0)', '500 cm', "Laranja"],
+              //     ]),
+
+              // pw.ListView(children: [
               pw.Padding(padding: const pw.EdgeInsets.all(10)),
               pw.Paragraph(text: "Vértices:"),
-              pw.Table.fromTextArray(
-                  context: context,
-                  data: const <List<String>>[
-                    <String>['Nome', 'Coordenadas (cm)', "Cor"],
-                    <String>['Vértice 1', '(0,200)', "Laranja"],
-                    <String>['Vértice 2', '(0,200)', "Laranja"],
-                  ]),
+              //  ]),
+              createTablePdfPointers(0, context),
 
               pw.Padding(padding: const pw.EdgeInsets.all(10)),
               pw.Paragraph(
@@ -622,10 +728,11 @@ class _PlanDownPage extends State<PlanDownPage> {
   Widget imageRender(p, isVisible) {
     scr = new GlobalKey();
     return isVisible
-        ? Column(children: [
-            new RepaintBoundary(
-              key: scr,
-              child: Container(
+        ? new RepaintBoundary(
+            key: scr,
+            child: Column(children: <Widget>[
+              metricPlanRefactor(this.deleteLastLine, '$planCm cm'),
+              Container(
                   padding: EdgeInsets.all(5),
                   child: Container(
                       padding: EdgeInsets.all(2),
@@ -635,9 +742,8 @@ class _PlanDownPage extends State<PlanDownPage> {
                         size: Size(planSize, planSize),
                         painter: p,
                       ))),
-            ),
-            metricPlan('0 cm', '$planCm  cm')
-          ])
+              metricPlan('0 cm', '$planCm  cm')
+            ]))
         : Container();
   }
 
@@ -665,214 +771,32 @@ class _PlanDownPage extends State<PlanDownPage> {
               SizedBox(
                 height: 20,
               ),
-              //pngBytes != null ? Image.memory(pngBytes) : Container(),
+              //  pngBytes != null ? Image.memory(pngBytes) : Container(),
               InkWell(
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (BuildContext context) => MyAppDownPdf()));
-                    //     takescrshot();
+                    takescrshot();
                   },
-                  child: Container(child: Text("Pdf"))),
-              metricPlanRefactor(this.deleteLastLine, '$planCm cm'),
+                  child: Container(child: Text("Gerar PDF"))),
 
-              imageRender(painter2, isVisible),
-              Container(
-                  padding: EdgeInsets.all(5),
-                  child: Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white)),
-                      child: CustomPaint(
-                        size: Size(planSize, planSize),
-                        painter: painter,
-                      ))),
-              //),
-              metricPlan('0 cm', '$planCm  cm'),
+              imageRender(painter2, isVisible)
+              // Container(
+              //     padding: EdgeInsets.all(5),
+              //     child: Container(
+              //         padding: EdgeInsets.all(2),
+              //         decoration: BoxDecoration(
+              //             border: Border.all(color: Colors.white)),
+              //         child: CustomPaint(
+              //           size: Size(planSize, planSize),
+              //           painter: painter,
+              //         ))),
+              // //),
+              // metricPlan('0 cm', '$planCm  cm'),
 
               //Print daqui:
 
               // buttonAdd('Adicionar Cômodo', Colors.deepOrangeAccent,
               //     Colors.white, this.addRoomsList),
-              SizedBox(
-                height: 0,
-              ),
-              Row(
-                children: <Widget>[
-                  txtGeneric("y", controllerStartY),
-                ],
-              ),
-
-              // InkWell(
-              //     onTap: () {
-              //       // addRoomMt(incrementX: 0.0, incrementY: 200.0);
-              //       //     addCookMt(incrementX: 0.0, incrementY: 0.0);
-              //       addOfficeMt(incrementX: 0.0, incrementY: 200.0);
-              //     },
-              //     child: Container(
-              //         color: Colors.white,
-              //         width: MediaQuery.of(context).size.width,
-              //         margin: EdgeInsets.only(left: 16, right: 16, top: 16),
-              //         padding: EdgeInsets.only(
-              //             left: 16, right: 16, top: 10, bottom: 10),
-              //         child: Row(
-              //           children: <Widget>[
-              //             Container(
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 child: Text("Escritório")),
-              //             txtGeneric("x", controllerStartX),
-              //             txtGeneric("y", controllerStartY),
-              //             Container(
-              //                 color: Colors.orange,
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 padding: EdgeInsets.all(10),
-              //                 child: Text("Add")),
-              //           ],
-              //         ))),
-
-              // InkWell(
-              //     onTap: () {
-              //       addRoomMt(incrementX: 0.0, incrementY: 200.0);
-              //       //     addCookMt(incrementX: 0.0, incrementY: 0.0);
-              //       // addOfficeMt(incrementX: 0.0, incrementY: 200.0);
-              //     },
-              //     child: Container(
-              //         color: Colors.white,
-              //         width: MediaQuery.of(context).size.width,
-              //         margin: EdgeInsets.only(left: 16, right: 16, top: 16),
-              //         padding: EdgeInsets.only(
-              //             left: 16, right: 16, top: 10, bottom: 10),
-              //         child: Row(
-              //           children: <Widget>[
-              //             Container(
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 child: Text("Sala de Estar")),
-              //             txtGeneric("x", controllerStartX),
-              //             txtGeneric("y", controllerStartY),
-              //             Container(
-              //                 color: Colors.orange,
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 padding: EdgeInsets.all(10),
-              //                 child: Text("Add")),
-              //           ],
-              //         ))),
-
-              // InkWell(
-              //     onTap: () {
-              //       //addRoomMt(incrementX: 0.0, incrementY: 200.0);
-              //       addCookMt(incrementX: 0.0, incrementY: 0.0);
-              //       // addOfficeMt(incrementX: 0.0, incrementY: 200.0);
-              //     },
-              //     child: Container(
-              //         color: Colors.white,
-              //         width: MediaQuery.of(context).size.width,
-              //         margin: EdgeInsets.only(left: 16, right: 16, top: 16),
-              //         padding: EdgeInsets.only(
-              //             left: 16, right: 16, top: 10, bottom: 10),
-              //         child: Row(
-              //           children: <Widget>[
-              //             Container(
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 child: Text("Cozinha")),
-              //             txtGeneric("x", controllerStartX),
-              //             txtGeneric("y", controllerStartY),
-              //             Container(
-              //                 color: Colors.orange,
-              //                 margin: EdgeInsets.only(right: 30),
-              //                 padding: EdgeInsets.all(10),
-              //                 child: Text("Add")),
-              //           ],
-              //         ))),
-
-              Card(
-                  margin: EdgeInsets.only(bottom: 10, left: 10, right: 10),
-                  color: Colors.cyan,
-                  child: DropdownButton<String>(
-                    value: dropdowTubeRoom,
-                    onChanged: (String newValue) {
-                      setState(() {
-                        dropdowTubeRoom = newValue;
-                        filtroRoom = categoriasRooms.indexOf(newValue);
-                      });
-                    },
-                    items: categoriasRooms
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Container(
-                            padding: EdgeInsets.all(10),
-                            width: MediaQuery.of(context).size.width - 90,
-                            child: Text(value)),
-                      );
-                    }).toList(),
-                  )),
-
-              optionsIcon(type),
-
-              this.type == 0
-                  ? (Container(
-                      margin: EdgeInsets.only(
-                          left: 20, right: 20, top: 20, bottom: 20),
-                      child: PropsListWallCell(
-                          bloc.selectPlan.rooms[filtroRoom].walls,
-                          changeWallselect,
-                          painter.selectWall)))
-                  : (Container(
-                      margin: EdgeInsets.only(
-                          left: 20, right: 20, top: 20, bottom: 20),
-                      child: PropsListVertexCell(
-                          bloc.selectPlan.rooms[filtroRoom].vertices,
-                          changeVertexselect,
-                          painter.selectVertex))),
             ])))),
-          ],
-        ));
-  }
-
-  Widget optionsIcon(type) {
-    return Container(
-        margin: EdgeInsets.all(5),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-                flex: 1,
-                child: SizedBox(
-                  height: 20,
-                )),
-            Container(
-                margin: EdgeInsets.only(left: 20, right: 20),
-                child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        this.type = 0;
-                        painter.selectVertex = null;
-                        painter.selectWall = null;
-                      });
-                    },
-                    child: Icon(
-                      Icons.border_style,
-                      color: type == 0 ? Colors.purple : Colors.white,
-                      size: 28,
-                    ))),
-            Container(
-                margin: EdgeInsets.only(left: 20, right: 20),
-                child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        this.type = 1;
-                        painter.selectVertex = null;
-                        painter.selectWall = null;
-                      });
-                    },
-                    child: Icon(
-                      Icons.center_focus_strong,
-                      color: type == 1 ? Colors.purple : Colors.white,
-                      size: 28,
-                    ))),
-            Expanded(
-                flex: 1,
-                child: SizedBox(
-                  height: 20,
-                )),
           ],
         ));
   }
@@ -917,13 +841,13 @@ class _PlanDownPage extends State<PlanDownPage> {
                 child: Container(
                     child: Text(left,
                         textAlign: TextAlign.left,
-                        style: TextStyle(color: Colors.white)))),
+                        style: TextStyle(color: Colors.black)))),
             Expanded(
                 flex: 1,
                 child: Container(
                     child: Text(right,
                         textAlign: TextAlign.right,
-                        style: TextStyle(color: Colors.white)))),
+                        style: TextStyle(color: Colors.black)))),
           ],
         ));
   }
@@ -939,81 +863,10 @@ class _PlanDownPage extends State<PlanDownPage> {
                     child: Text(
                   right,
                   textAlign: TextAlign.right,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.black),
                 ))),
           ],
         ));
-  }
-
-  Widget titleGeneric(title) {
-    return Expanded(
-        flex: 1,
-        child: Container(
-          margin: EdgeInsets.only(top: 15, left: 25, right: 5),
-          child: Text(
-            title,
-            style: TextStyle(color: Colors.white, fontSize: 18),
-            textAlign: TextAlign.center,
-          ),
-        ));
-  }
-
-  Widget txtGeneric(name, controller) {
-    return Expanded(
-      flex: 1,
-      child: TextField(
-        decoration: InputDecoration(
-          hintStyle: TextStyle(fontSize: 14),
-          hintText: name,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.all(0),
-        ),
-      ),
-    );
-  }
-
-  Widget buttonAdd(title, background, color, function) {
-    return ConstrainedBox(
-        constraints: BoxConstraints(minWidth: double.infinity),
-        child: InkWell(
-            onTap: () {
-              function();
-            },
-            child: Container(
-                child: Container(
-                    padding: EdgeInsets.all(15),
-                    margin: EdgeInsets.only(top: 15, left: 35, right: 35),
-                    decoration: BoxDecoration(
-                      color: background,
-                      borderRadius: BorderRadius.all(Radius.circular(50)),
-                    ),
-                    child: Text(
-                      title,
-                      style: TextStyle(color: color, fontSize: 18),
-                      textAlign: TextAlign.center,
-                    )))));
-  }
-
-  void roomsAddDialog(context) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.0)), //this right here
-            child: Container(
-              height: 210,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [Text("Modal insert rooms")],
-                ),
-              ),
-            ),
-          );
-        });
   }
 }
 

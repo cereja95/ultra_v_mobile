@@ -4,6 +4,7 @@ class Point {
   double x = 0;
   double y = 0;
   String id;
+  Color color = null;
   Point(x, y, {id}) {
     this.x = x;
     this.y = y;
