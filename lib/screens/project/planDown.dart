@@ -278,24 +278,27 @@ class _PlanDownPage extends State<PlanDownPage> {
                 height: 20,
               ),
               pngBytes != null ? Image.memory(pngBytes) : Container(),
-              InkWell(
-                  onTap: () {
-                    takescrshot();
-                  },
-                  child: Container(child: Text("isjijsijs"))),
+              // InkWell(
+              //     onTap: () {
+              //       takescrshot();
+              //     },
+              //     child: Container(child: Text("isjijsijs"))),
               metricPlanRefactor(this.deleteLastLine, '$planCm cm'),
-              RepaintBoundary(
-                  key: scr,
+              // RepaintBoundary(
+              //     key: scr,
+              //     child:
+              Container(
+                  padding: EdgeInsets.all(5),
                   child: Container(
-                      padding: EdgeInsets.all(5),
-                      child: Container(
-                          padding: EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                              border: Border.all(color: Colors.white)),
-                          child: CustomPaint(
-                            size: Size(planSize, planSize),
-                            painter: painter,
-                          )))),
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white)),
+                      child: CustomPaint(
+                        size: Size(planSize, planSize),
+                        painter: painter,
+                      )))
+              //)
+              ,
               metricPlan('0 cm', '$planCm  cm'),
               // buttonAdd('Adicionar Cômodo', Colors.deepOrangeAccent,
               //     Colors.white, this.addRoomsList),
